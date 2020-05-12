@@ -2,19 +2,20 @@
 <html>
   <head>
     <title>
-      Docs API Extract Body
+      Crombobumlator
     </title>
     <meta charset="utf-8"/>
   </head>
   <body>
-    <p>
-      Docs API Extract Body
-    </p>
-    <!--Add buttons to initiate auth sequence and sign out-->
+    <h1>Google Docs Web Sequence Diagrams Shared Editing Thingy</h1>
+
+    <!--Add buttons to initiate Google auth sequence and sign out-->
     <button id="authorize-button" style="display: none;">Authorize</button>
     <button id="signout-button" style="display: none;">Sign Out</button>
+
     <label for="docid">Google Docs ID:</label>
-    <input name="docid" id="docid" disabled>
+    <input name="docid" id="docid" style="width: 40em;" disabled>
+
     <hr>
     <br>
 
@@ -77,7 +78,6 @@
         if (isSignedIn) {
         authorizeButton.style.display = 'none';
         signoutButton.style.display = 'block';
-        //printDocBody();
         docId.disabled = false;
         interval = setInterval(refreshDocContent,1000);
 
@@ -104,6 +104,8 @@
       }
 
 
+      /* Given a google doc as JSON, extract just the text of the
+         document and return it as a string */
       function extractDocFromJSON(doc) {
         ret = ""
         for (s of doc['content']){
@@ -116,20 +118,31 @@
         return ret;
       }
 
+      /* create a new invisible wsd container div, run the wsd script
+         that replaces the content with an image, then remove the old
+         container and make the new container visible */
       function refreshDiagram() {
-        $("#diagram-container")
-            .empty()
-            .append($("<div></div>")
+        var newDiag = $("<div></div>")
                 .addClass("wsd")
-                .attr("wsd-style", "default")
+                .css("display", "none")
+                .attr("wsd-style", "modern-blue")
                 .append($("<pre></pre>")
                     .html($("#content").html())
                 )
-            )
         ;
-        $.getScript("https://www.websequencediagrams.com/service.js");
+        $("#diagram-container").append(newDiag);
+        
+        $.getScript(
+            "https://www.websequencediagrams.com/service.js",
+            function() {
+                $("#diagram-container div:visible").remove()
+                newDiag.css("display", "block")
+            }
+        );
       }
 
+      /* get the content of the google doc and if it has changed,
+         refresh the diagram */
       var oldDoc = null;
       function refreshDocContent() {
         did = docId.value;
@@ -137,7 +150,6 @@
         {
             gapi.client.docs.documents.get({
             documentId: did
-            // 1lXJ2kHJMqFDrwS9iCmcQD-VWYKCHJJZex9ycKPvFyFk
         }).then(function(response) {
             var doc = response.result;
             var pre = document.getElementById('content');
@@ -156,10 +168,13 @@
         }
       }
     </script>
+
     <script async="" defer="" onload="this.onload=function(){};handleClientLoad()" onreadystatechange="if (this.readyState === 'complete') this.onload()" src="https://apis.google.com/js/api.js"></script>
+
   <script
   src="https://code.jquery.com/jquery-3.5.1.js"
   integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
   crossorigin="anonymous"></script>
+
   </body>
 </html>
